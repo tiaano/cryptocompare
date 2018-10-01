@@ -1,35 +1,62 @@
+library(readxl)
 library(httr)
 library(jsonlite)
+library(dplyr)
+library(purrr)
+
+# Get symbol pairs from xlsx
+
+rxls <- read_xlsx("/Users/Shared/Development/RStudio/cryptocompare/Binance Trading Pairs.xlsx",sheet = "Binance")
+rxls <- rxls %>% select(TradeCoin,BaseCoin) %>% mutate(BaseCoin = gsub(pattern = "USDT",replacement = "USD",x = BaseCoin,fixed = T))
 
 
-# Init variables ----
-u_base <- "https://min-api.cryptocompare.com/data/histominute"
 
-u_from_sym <- "BTC"
-u_to_sym <- "USD"
-u_limit <- 60
-u_agg <- 1
+Get_Trade_Info <- function(p_from_sym,p_to_sym) {
+  # Init variables ----
+  u_base <- "https://min-api.cryptocompare.com/data/histominute"
+  
+  u_from_sym <- p_from_sym
+  u_to_sym <- p_to_sym
+  u_limit <- 50
+  u_agg <- 1
+  
 
-# Init URL ----
-u_tail <- paste("fsym=",u_from_sym,"&tsym=",u_to_sym,"&limit=",u_limit,"&aggregate=",u_agg,"&e=CCCAGG",sep = "")
+  
+  # Init URL ----
+  u_tail <- paste("fsym=",u_from_sym,"&tsym=",u_to_sym,"&limit=",u_limit,"&aggregate=",u_agg,"&e=CCCAGG",sep = "")
+  
+  p_url <- paste(u_base,u_tail,sep="?")
+  
+  # Call API ----
+  
+  get_prices <- GET(p_url)
+  
+  # Get Data ----
+  
+  get_prices_text <- content(get_prices, "text")
+  
+  get_prices_json <- fromJSON(get_prices_text, flatten = TRUE)
+  
+  dt_prices <- as.data.frame(get_prices_json$Data)
+  
+  # Clean Data ----
+  
+  
+  dt_prices$CTime <- as.POSIXct(dt_prices$time, origin="1970-01-01")
+  dt_prices$time <- NULL
+  
+  dt_prices$from_sym <- u_from_sym
+  dt_prices$to_sym <- u_to_sym
+  
+  Sys.sleep(5)
+  
+  return(dt_prices)
+  
 
-p_url <- paste(u_base,u_tail,sep="?")
+  
+}
 
-# Call API ----
+rxls <- rxls[1:5,]
 
-get_prices <- GET(p_url)
-
-# Get Data ----
-
-get_prices_text <- content(get_prices, "text")
-
-get_prices_json <- fromJSON(get_prices_text, flatten = TRUE)
-
-dt_prices <- as.data.frame(get_prices_json$Data)
-
-# Clean Data ----
-
-
-dt_prices$CTime <- as.POSIXct(dt_prices$time, origin="1970-01-01")
-str(dt_prices)
+trade_data <- map2(rxls$TradeCoin,rxls$BaseCoin,Get_Trade_Info)
 
