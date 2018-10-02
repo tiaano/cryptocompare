@@ -9,15 +9,17 @@ library(purrr)
 rxls <- read_xlsx("/Users/Shared/Development/RStudio/cryptocompare/Binance Trading Pairs.xlsx",sheet = "Binance")
 rxls <- rxls %>% select(TradeCoin,BaseCoin) %>% mutate(BaseCoin = gsub(pattern = "USDT",replacement = "USD",x = BaseCoin,fixed = T))
 
-
+itt <- 0
 
 Get_Trade_Info <- function(p_from_sym,p_to_sym) {
+  
+  itt <<- itt + 1
   # Init variables ----
   u_base <- "https://min-api.cryptocompare.com/data/histominute"
   
   u_from_sym <- p_from_sym
   u_to_sym <- p_to_sym
-  u_limit <- 50
+  u_limit <- 2000
   u_agg <- 1
   
 
@@ -48,7 +50,7 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   dt_prices$from_sym <- u_from_sym
   dt_prices$to_sym <- u_to_sym
   
-  Sys.sleep(5)
+  print(itt)
   
   return(dt_prices)
   
@@ -56,7 +58,11 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   
 }
 
-rxls <- rxls[1:5,]
-
+itt <- 0
+options(scipen=999)
 trade_data <- map2(rxls$TradeCoin,rxls$BaseCoin,Get_Trade_Info)
+
+tbl_trade_data <- bind_rows(trade_data)
+
+tbl_trade_data %>% group_by(from_sym,to_sym) %>% summarise(max(CTime))
 
