@@ -17,7 +17,7 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   
   itt <<- itt + 1
   # Init variables ----
-  u_base <- "https://min-api.cryptocompare.com/data/histominute"
+  u_base <- "https://min-api.cryptocompare.com/data/histohour"
   
   u_from_sym <- p_from_sym
   u_to_sym <- p_to_sym
@@ -53,6 +53,8 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   dt_prices$to_sym <- u_to_sym
   
   print(itt)
+
+  Sys.sleep(1)
   
   return(dt_prices)
   
@@ -66,4 +68,4 @@ trade_data <- map2(rxls$TradeCoin,rxls$BaseCoin,Get_Trade_Info)
 
 tbl_trade_data <- bind_rows(trade_data)
 
-write.csv(tbl_trade_data,"/crypto_arch/data/trade_data_min.csv")
+write.csv(tbl_trade_data,"/crypto_arch/data/trade_data_hour.csv")
