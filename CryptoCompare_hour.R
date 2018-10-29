@@ -68,4 +68,14 @@ trade_data <- map2(rxls$TradeCoin,rxls$BaseCoin,Get_Trade_Info)
 
 tbl_trade_data <- bind_rows(trade_data)
 
-write.csv(tbl_trade_data,"/crypto_arch/data/trade_data_hour.csv")
+latest_hrs <- readRDS(file = "hour_latest.rds")
+
+tbl_trade_data <- tbl_trade_data %>% left_join(latest_hrs, by = c("from_sym", "to_sym")) %>%
+  filter(CTime > LastTime)
+
+tbl_trade_data %>% group_by(from_sym,to_sym) %>% summarise(LastTime = max(CTime)) %>% 
+  saveRDS("hr_latest.rds")
+
+write_csv(tbl_trade_data,"/crypto_arch/data/trade_data_hour.csv",append = T)
+
+

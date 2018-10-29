@@ -3,12 +3,15 @@ library(httr)
 library(jsonlite)
 library(dplyr)
 library(purrr)
+library(readr)
 
 # Get symbol pairs from xlsx
 
 
 
-rxls <- read_xlsx("/crypto_arch/scripts/cryptocompare/Binance Trading Pairs.xlsx",sheet = "Binance")
+# rxls <- read_xlsx("/crypto_arch/scripts/cryptocompare/Binance Trading Pairs.xlsx",sheet = "Binance")
+ rxls <- read_xlsx("Binance Trading Pairs.xlsx",sheet = "Binance")
+
 rxls <- rxls %>% select(TradeCoin,BaseCoin) %>% mutate(BaseCoin = gsub(pattern = "USDT",replacement = "USD",x = BaseCoin,fixed = T))
 
 itt <- 0
@@ -21,7 +24,7 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   
   u_from_sym <- p_from_sym
   u_to_sym <- p_to_sym
-  u_limit <- 2000
+  u_limit <- 20
   u_agg <- 1
   
 
@@ -66,4 +69,13 @@ trade_data <- map2(rxls$TradeCoin,rxls$BaseCoin,Get_Trade_Info)
 
 tbl_trade_data <- bind_rows(trade_data)
 
-write.csv(tbl_trade_data,"/crypto_arch/data/trade_data_min.csv")
+latest_mins <- readRDS(file = "min_latest.rds")
+
+tbl_trade_data <- tbl_trade_data %>% left_join(latest_mins, by = c("from_sym", "to_sym")) %>%
+  filter(CTime > LastTime)
+
+tbl_trade_data %>% group_by(from_sym,to_sym) %>% summarise(LastTime = max(CTime)) %>% 
+  saveRDS("min_latest.rds")
+
+write_csv(tbl_trade_data,"trade_data_min.csv",append = T)
+
