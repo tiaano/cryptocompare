@@ -19,6 +19,9 @@ rxls <- rxls %>% select(TradeCoin,BaseCoin) %>% mutate(BaseCoin = gsub(pattern =
 
 itt <- 0
 
+write_lines(date(),"Crypto_Log.log",append = T)
+write_lines("Start Minute Run","Crypro_Log.log",append = T)
+
 Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   
   itt <<- itt + 1
@@ -27,7 +30,7 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   
   u_from_sym <- p_from_sym
   u_to_sym <- p_to_sym
-  u_limit <- 20
+  u_limit <- 60
   u_agg <- 1
   
 
@@ -66,9 +69,13 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   
 }
 
+write_lines(paste0(date()," - ", "Minute run ended"),"Crypro_Log.log",append = T)
+
 itt <- 0
 options(scipen=999)
 trade_data <- map2(rxls$TradeCoin,rxls$BaseCoin,Get_Trade_Info)
+
+
 
 tbl_trade_data <- bind_rows(trade_data)
 
