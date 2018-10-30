@@ -72,10 +72,12 @@ trade_data <- map2(rxls$TradeCoin,rxls$BaseCoin,Get_Trade_Info)
 
 tbl_trade_data <- bind_rows(trade_data)
 
-latest_mins <- readRDS(file = "min_latest.rds")
-
-tbl_trade_data <- tbl_trade_data %>% left_join(latest_mins, by = c("from_sym", "to_sym")) %>%
+if (file.exists("min_latest.rds")){
+  latest_mins <- readRDS(file = "min_latest.rds")
+  
+  tbl_trade_data <- tbl_trade_data %>% left_join(latest_mins, by = c("from_sym", "to_sym")) %>%
   filter(CTime > LastTime)
+  }
 
 tbl_trade_data %>% group_by(from_sym,to_sym) %>% summarise(LastTime = max(CTime)) %>% 
   saveRDS("min_latest.rds")
