@@ -19,8 +19,6 @@ rxls <- rxls %>% select(TradeCoin,BaseCoin) %>% mutate(BaseCoin = gsub(pattern =
 
 itt <- 0
 
-write_lines(date(),"Crypto_Log.log",append = T)
-write_lines("Start Minute Run","Crypro_Log.log",append = T)
 
 Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   
@@ -55,13 +53,10 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   # Clean Data ----
   
   
-  dt_prices$CTime <- as.POSIXct(dt_prices$time, origin="1970-01-01")
-  dt_prices$time <- NULL
-  
   dt_prices$from_sym <- u_from_sym
   dt_prices$to_sym <- u_to_sym
   
-  print(itt)
+  #print(itt)
   
   return(dt_prices)
   
@@ -69,15 +64,21 @@ Get_Trade_Info <- function(p_from_sym,p_to_sym) {
   
 }
 
-write_lines(paste0(date()," - ", "Minute run ended"),"Crypro_Log.log",append = T)
+
 
 itt <- 0
 options(scipen=999)
+
+write_lines(paste0(date()," - ","Start Minute Run"),"Crypto_Log.log",append = T)
+
 trade_data <- map2(rxls$TradeCoin,rxls$BaseCoin,Get_Trade_Info)
 
-
-
 tbl_trade_data <- bind_rows(trade_data)
+write_lines(paste0(date()," - ", "Minute run scraped ",nrow(tbl_trade_data)," records"),"Crypto_Log.log",append = T)
+
+
+tbl_trade_data$CTime <- as.POSIXct(tbl_trade_data$time, origin="1970-01-01")
+tbl_trade_data$time <- NULL
 
 if (file.exists("min_latest.rds")){
   latest_mins <- readRDS(file = "min_latest.rds")
@@ -91,4 +92,6 @@ tbl_trade_data %>% group_by(from_sym,to_sym) %>% summarise(LastTime = max(CTime)
 
 
 write_csv(tbl_trade_data,"trade_data_min.csv",append = T)
+
+write_lines(paste0(date()," - ", "Minute run ended (added ",nrow(tbl_trade_data)," new records)"),"Crypto_Log.log",append = T)
 
