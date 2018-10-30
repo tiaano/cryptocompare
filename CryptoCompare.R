@@ -7,7 +7,10 @@ library(readr)
 
 # Get symbol pairs from xlsx
 
+working_dir = "/crypto_arch/scripts/cryptocompare/"
 
+
+setwd(working_dir)
 
 # rxls <- read_xlsx("/crypto_arch/scripts/cryptocompare/Binance Trading Pairs.xlsx",sheet = "Binance")
  rxls <- read_xlsx("Binance Trading Pairs.xlsx",sheet = "Binance")
@@ -76,6 +79,7 @@ tbl_trade_data <- tbl_trade_data %>% left_join(latest_mins, by = c("from_sym", "
 
 tbl_trade_data %>% group_by(from_sym,to_sym) %>% summarise(LastTime = max(CTime)) %>% 
   saveRDS("min_latest.rds")
+
 
 write_csv(tbl_trade_data,"trade_data_min.csv",append = T)
 
